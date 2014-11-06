@@ -26,8 +26,9 @@ def play(data, df=44100, scale=None):
     if _pyaudio is None:
         _pyaudio = pyaudio.PyAudio()
 
-    # normalize the data
-    data = audio.wave.read(audio.wave.write(data, df=df, scale), scale=False)
+    # write-read round trip to normalize the data
+    stream = audio.wave.write(data, df=df, scale=scale)
+    data = audio.wave.read(stream, scale=False)
     assert data.dtype == np.int16 and len(np.shape(data)) == 2
 
     output = _pyaudio.open(format   = pyaudio.paInt16  ,
