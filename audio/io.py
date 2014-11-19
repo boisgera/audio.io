@@ -48,6 +48,8 @@ def play(data, df=44100, scale=None):
     output.stop_stream()
     output.close()
 
+# TODO: investigate stereo support.
+
 def record(seconds=np.inf, df=44100, scale=None):
     init()
 
