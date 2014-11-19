@@ -27,8 +27,6 @@ def exit():
         _pyaudio.terminate()
 
 def play(data, df=44100, scale=None):
-    init()
-
     df = int(df)
 
     # write-read round trip to normalize the data
@@ -36,10 +34,12 @@ def play(data, df=44100, scale=None):
     data = audio.wave.read(stream, scale=False)
     assert data.dtype == np.int16 and len(np.shape(data)) == 2
 
+    init()
     output = _pyaudio.open(format   = pyaudio.paInt16  ,
                            channels = np.shape(data)[0],
                            rate     = int(df)          ,
                            output   = True             )
+
     flat = np.ravel(data.T.newbyteorder())
     stream = audio.bitstream.BitStream(flat)
     raw = stream.read(bytes, len(stream) // 8)
@@ -48,13 +48,11 @@ def play(data, df=44100, scale=None):
     output.stop_stream()
     output.close()
 
-# TODO: investigate stereo support.
-
-def record(seconds=np.inf, df=44100, scale=None):
-    init()
-
+def record(seconds=np.inf, stereo=True, df=44100, scale=None):
     df = int(df)
+    num_channels = 1 + stereo
 
+    init()
     input = _pyaudio.open(format   = pyaudio.paInt16,
                           channels = 1              ,
                           rate     = df             ,
@@ -79,6 +77,7 @@ def record(seconds=np.inf, df=44100, scale=None):
 
     stream = audio.bitstream.BitStream(raw)
     data = stream.read(np.int16, len(raw) // 2).newbyteorder()
+    data = np.reshape(data, (len(data) // num_channels, num_channels)).T
 
     # write-read round trip to normalize the data
     stream = audio.wave.write(data, df=df)
