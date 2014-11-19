@@ -16,15 +16,20 @@ import pyaudio
 
 _pyaudio = None
 
+def init():
+    global _pyaudio
+    if _pyaudio is None:
+        _pyaudio = pyaudio.PyAudio()    
+
 @atexit.register
 def exit():
     if _pyaudio is not None:
         _pyaudio.terminate()
 
 def play(data, df=44100, scale=None):
-    global _pyaudio
-    if _pyaudio is None:
-        _pyaudio = pyaudio.PyAudio()
+    init()
+
+    df = int(df)
 
     # write-read round trip to normalize the data
     stream = audio.wave.write(data, df=df, scale=scale)
@@ -42,4 +47,44 @@ def play(data, df=44100, scale=None):
     output.write(raw)
     output.stop_stream()
     output.close()
+
+def record(seconds=np.inf, df=44100, scale=None):
+    init()
+
+    df = int(df)
+
+    input = _pyaudio.open(format   = pyaudio.paInt16,
+                          channels = 1              ,
+                          rate     = df             ,
+                          input    = True           )
+
+    try:
+        num_samples = int(df * seconds)
+    except OverflowError:
+        num_samples = np.inf
+
+    raw_frames = []
+    while num_samples:
+        try:
+            raw = input.read(min(num_samples, 882))
+            raw_frames.append(raw)
+            num_samples = num_samples - (len(raw) // 2)
+        except KeyboardInterrupt:
+            break
+    raw = "".join(raw_frames)
+    input.stop_stream()
+    input.close()
+
+    stream = audio.bitstream.BitStream(raw)
+    data = stream.read(np.int16, len(raw) // 2).newbyteorder()
+
+    # write-read round trip to normalize the data
+    stream = audio.wave.write(data, df=df)
+    data = audio.wave.read(stream, scale=scale)
+
+    return data
+
+
+
+
 

@@ -25,11 +25,11 @@ except pkg_resources.DistributionNotFound:
     name, url = "PyAudio", "http://people.csail.mit.edu/hubert/pyaudio/"
     raise ImportError(error.format(name=name, url=url))
 
-def local(path):
+def srcdir(path):
     return os.path.join(os.path.dirname(__file__), path)
 
 # Extra Third-Party Libraries (for setup only)
-sys.path.insert(1, local(".lib"))
+sys.path.insert(1, srcdir(".lib"))
 try:
     setup_requires = ["about>=4.0.0"]
     require = lambda *r: pkg_resources.WorkingSet().require(*r)
@@ -44,7 +44,7 @@ except pkg_resources.DistributionNotFound:
 import about
 
 # This Package
-sys.path.insert(1, local("audio"))
+sys.path.insert(1, srcdir("audio"))
 import about_io
 
 info = dict(
