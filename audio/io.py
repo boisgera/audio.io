@@ -19,7 +19,7 @@ _pyaudio = None
 def init():
     global _pyaudio
     if _pyaudio is None:
-        _pyaudio = pyaudio.PyAudio()    
+        _pyaudio = pyaudio.PyAudio()
 
 @atexit.register
 def exit():
@@ -48,7 +48,7 @@ def play(data, df=44100, scale=None):
     output.stop_stream()
     output.close()
 
-def record(seconds=np.inf, stereo=True, df=44100, scale=None):
+def record(duration=np.inf, stereo=True, df=44100, scale=None):
     df = int(df)
     num_channels = 1 + stereo
 
@@ -59,7 +59,7 @@ def record(seconds=np.inf, stereo=True, df=44100, scale=None):
                           input    = True           )
 
     try:
-        num_samples = int(df * seconds)
+        num_samples = int(df * duration)
     except OverflowError:
         num_samples = np.inf
 
@@ -84,8 +84,4 @@ def record(seconds=np.inf, stereo=True, df=44100, scale=None):
     data = audio.wave.read(stream, scale=scale)
 
     return data
-
-
-
-
 
