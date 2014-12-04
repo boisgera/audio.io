@@ -54,21 +54,22 @@ def record(duration=np.inf, stereo=True, df=44100, scale=None):
 
     init()
     input = _pyaudio.open(format   = pyaudio.paInt16,
-                          channels = 1              ,
+                          channels = num_channels   ,
                           rate     = df             ,
                           input    = True           )
 
     try:
-        num_samples = int(df * duration)
+        num_ticks = int(df * duration)
     except OverflowError:
-        num_samples = np.inf
+        num_ticks = np.inf
 
+    frame_length = int(20.0 / 1000.0 * df) # 20 ms
     raw_frames = []
-    while num_samples:
+    while num_ticks:
         try:
-            raw = input.read(min(num_samples, 882))
+            raw = input.read(min(num_ticks, frame_length))
             raw_frames.append(raw)
-            num_samples = num_samples - (len(raw) // 2)
+            num_ticks = num_ticks - (len(raw) // 2 // num_channels)
         except KeyboardInterrupt:
             break
     raw = "".join(raw_frames)
